@@ -6,11 +6,9 @@
 #include <libconfig.h>
 
 #include "macro.h"
-//#include "common.h"
 #include "lib_config_method.h"
 #include "define.h"
 #include "errorno.h"
-//#include "util_lib.h"
 
 // allocate config data memory
 #define malloc_One_ConfigData_In_ConfigDataGroups(config_data_index) do{\
@@ -409,10 +407,6 @@ static int write_config_conf(
                         );
                     }
                 }
-                //config_setting_set_string_elem(
-                //    tmp_setting,
-                //    array_num_int,
-                //    tmp_conf_data->string_pchar);
                 break;
             }
         }
@@ -570,128 +564,3 @@ int modify_config(char *file_path, tConfigDataGroups *config_data_grp_pstruct)
     remove(file_path);
     return write_config_file(file_path, config_data_grp_pstruct);
 }
-
-#if 0
-int read_one_config(
-    char *file_path,
-    tConfigData *input_pstruct)
-{
-    if((NULL == file_path) || (NULL == input_pstruct))
-        return -1;
-
-
-    int index_int = -1;
-    for (int i = 0; _g_config_table_pstruct[i].name_achar; i++)
-    {
-        if( !strcmp(input_pstruct->name_achar, _g_config_table_pstruct[i].name_achar) &&
-            (_g_config_table_pstruct[i].data_type_int == input_pstruct->data_type_int)
-        )
-        {
-            index_int = i;
-            break;
-        }
-    }
-
-    if(-1 == index_int)
-        return 0;
-
-
-    int ret_int = 0;
-    config_t config_struct;
-    config_init(&config_struct);
-
-    if (!config_read_file(&config_struct, file_path))
-    {
-        LCM_ERR_PRINT("Error file %s(%d) - %s\n", config_error_file(&config_struct),
-            config_error_line(&config_struct), config_error_text(&config_struct));
-        csglog_err("Error file %s(%d) - %s\n", config_error_file(&config_struct),
-            config_error_line(&config_struct), config_error_text(&config_struct));
-        ret_int = -1;
-        goto read_one_config_exit_label;
-    }
-
-    switch(input_pstruct->data_type_int)
-    {
-        case eSTRING:
-        {
-            const char *string_pchar;
-            if (config_lookup_string(&config_struct,
-                    input_pstruct->name_achar,
-                    &string_pchar)
-            ) strcpyALL(input_pstruct->string_pchar, (char *)string_pchar);
-
-            break;
-        }
-        case eINT:
-        {
-            int value_int;
-            if (config_lookup_int(&config_struct,
-                    input_pstruct->name_achar,
-                    &value_int)
-            ) input_pstruct->value_int = value_int;
-
-            break;
-        }
-        case eFLOAT:
-        {
-            double value_float = 0;
-            if (config_lookup_float(&config_struct,
-                    input_pstruct->name_achar,
-                    &value_float)
-            ) input_pstruct->value_float = value_float;
-
-            break;
-        }
-        case eLONGLONG:
-        {
-            long long value_llong = 0;
-            if (config_lookup_int64(&config_struct,
-                    input_pstruct->name_achar,
-                    &value_llong)
-            ) input_pstruct->value_llong = value_llong;
-
-            break;
-        }
-        case eNEST_STRUCT:
-            break;
-        case eArray :
-        {
-            config_setting_t *root = config_root_setting(&config_struct);
-            if(NULL == root)
-                break;
-
-            config_setting_t *tmp_setting = config_setting_get_member(
-                    root,
-                    input_pstruct->name_achar
-            );
-            if(NULL == tmp_setting)
-                break;
-
-            int array_num_int = config_setting_length(tmp_setting);
-            input_pstruct->str_pp_num_int = array_num_int;
-            if(array_num_int > 0)
-            {
-                //// write config value
-                input_pstruct->string_ppchar = malloc(array_num_int*sizeof(char **));
-                for (int i = 0; i < array_num_int; i++)
-                {
-                    strcpyALL(
-                        input_pstruct->string_ppchar[i],
-                        (char *)config_setting_get_string_elem(tmp_setting, i)
-                    );
-
-                }
-            }
-            break;
-        }
-    }
-
-read_one_config_exit_label :
-    config_destroy(&config_struct);
-    return ret_int;
-}
-
-
-
-#endif
-
